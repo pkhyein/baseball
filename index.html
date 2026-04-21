@@ -3,133 +3,374 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>베이스볼 마스터 퀴즈</title>
+    <title>LA Dodgers Baseball Terminology Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
         :root {
-            --primary-color: #041E42; /* 네이비 */
-            --secondary-color: #BF0D3E; /* 레드 */
-            --bg-color: #f4f4f4;
+            --dodger-blue: #005A9C;
+            --white: #FFFFFF;
+            --silver: #A5ACAF;
+            --light-grey: #F0F0F0;
+            --success-green: #28a745;
+            --fail-red: #dc3545;
+            --text-dark: #333333;
+            --card-shadow: 0 10px 30px rgba(0,0,0,0.15);
         }
 
         body {
-            font-family: 'Pretendard', sans-serif;
-            background-color: var(--bg-color);
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--light-grey);
+            /* Subtle baseball graphic overlay */
+            background-image: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(240,240,240,0.8) 100%), url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48ZyBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNhNWFDQUYiIGZpbGwtb3BhY2l0eT0iMC4xNSI+PHBhdGggZD0iTTAgMGg0MHY0MEgwVjB6bTIwIDIwaDIwdjIwSDIWMjB6TTAgMjBoMjB2MjBIMFYyMHoyMCAwaDIwdjIwSDIwVjB6Ii8+PC9nPjwvZz48L3N2Zz4=');
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
+            overflow: hidden;
         }
 
+        /* Based on image_0.png layout */
         #quiz-card {
-            background: white;
-            padding: 2rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background: var(--white);
+            border: 2px solid var(--silver);
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
             width: 90%;
-            max-width: 500px;
+            max-width: 600px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* LA Dodgers themed header */
+        .quiz-header {
+            background-color: var(--dodger-blue);
+            color: var(--white);
+            padding: 15px 20px;
             text-align: center;
-            border-top: 8px solid var(--primary-color);
+            position: relative;
+            border-bottom: 3px solid var(--silver);
         }
 
-        .progress {
+        /* Stylized 'LA' logos in header */
+        .header-logo {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .logo-left { left: 20px; }
+        .logo-right { right: 20px; }
+
+        .quiz-title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.6rem;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Question counter */
+        .progress-bar {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+            padding: 8px 20px;
             font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 1rem;
+            color: var(--dodger-blue);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
         }
 
-        .question {
-            font-size: 1.4rem;
-            font-weight: bold;
-            margin-bottom: 2rem;
+        /* Question Text - matching image_0.png */
+        .question-container {
+            padding: 25px;
+            background-color: #fbfbfb;
+            border-bottom: 2px solid #eee;
+        }
+
+        .question-text {
+            font-family: 'Roboto', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            line-height: 1.5;
+            text-align: center;
+            margin: 0;
             word-break: keep-all;
         }
 
-        .options {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+        /* Options Grid */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding: 20px;
         }
 
-        button {
-            padding: 12px;
-            font-size: 1rem;
+        /* Answer Buttons */
+        .option-btn {
+            font-family: 'Roboto', sans-serif;
+            padding: 18px;
+            font-size: 1.1rem;
+            font-weight: 700;
             border: 2px solid #eee;
             border-radius: 10px;
-            background: white;
+            background: linear-gradient(to bottom, #ffffff 0%, #f6f6f6 100%);
+            color: var(--dodger-blue);
             cursor: pointer;
             transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            outline: none;
         }
 
-        button:hover {
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--dodger-blue);
             background: #f0f7ff;
-            border-color: var(--primary-color);
+            transform: translateY(-2px);
         }
 
-        button:active {
-            transform: scale(0.98);
+        .option-btn:active:not(:disabled) {
+            transform: translateY(1px);
         }
 
-        #result {
+        /* Disabled state after selection */
+        .option-btn:disabled {
+            cursor: default;
+            opacity: 0.6;
+            background: #f1f1f1;
+            color: #888;
+        }
+
+        /* Correct state - Green (matching image_0.png) */
+        .option-btn.correct {
+            border-color: var(--success-green);
+            background: #e9f7ef;
+            color: var(--success-green);
+            opacity: 1 !important;
+        }
+
+        /* Incorrect state - Red */
+        .option-btn.wrong {
+            border-color: var(--fail-red);
+            background: #fdedec;
+            color: var(--fail-red);
+            opacity: 1 !important;
+        }
+
+        /* Next Button - MLB style */
+        .next-btn-container {
+            display: none; /* Initially hidden */
+            padding: 0 20px 20px;
+            text-align: center;
+        }
+
+        .next-btn {
+            font-family: 'Oswald', sans-serif;
+            background-color: var(--dodger-blue);
+            color: var(--white);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: background 0.2s;
+        }
+
+        .next-btn:hover {
+            background-color: #00467c;
+        }
+
+        /* Explanation Banner - matching image_0.png footer */
+        #explanation-banner {
+            display: none; /* Hidden until selection */
+            background-color: var(--dodger-blue);
+            color: var(--white);
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 1rem;
+            line-height: 1.4;
+            border-top: 2px solid var(--silver);
+        }
+
+        #explanation-banner.correct {
+            border-color: var(--success-green);
+        }
+
+        #explanation-banner.wrong {
+            border-color: var(--fail-red);
+        }
+
+        /* Result View */
+        #result-view {
             display: none;
+            padding: 30px 20px;
+            text-align: center;
         }
 
-        .score-text {
-            font-size: 3rem;
+        .result-header {
+            font-family: 'Oswald', sans-serif;
+            color: var(--dodger-blue);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .final-score {
+            font-size: 4rem;
             font-weight: 900;
-            color: var(--secondary-color);
-            margin: 1rem 0;
+            color: var(--fail-red); /* Dodgers Red accent */
+            margin: 15px 0;
+            font-family: 'Oswald', sans-serif;
         }
 
-        .ceremony-msg {
-            font-size: 1.2rem;
-            line-height: 1.6;
-            margin-bottom: 2rem;
+        /* Detailed Review Section */
+        #review-container {
+            margin-top: 30px;
+            text-align: left;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            background-color: #fbfbfb;
         }
+
+        .review-item {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .review-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .review-q-text {
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .review-ans {
+            display: flex;
+            gap: 15px;
+            font-size: 0.95rem;
+        }
+
+        .ans-label { font-weight: bold; color: #555; }
+        .ans-correct { color: var(--success-green); font-weight: bold; }
+        .ans-wrong { color: var(--fail-red); font-weight: bold; }
 
         .retry-btn {
-            background: var(--primary-color);
-            color: white;
+            font-family: 'Oswald', sans-serif;
+            margin-top: 25px;
+            background-color: var(--silver);
+            color: var(--text-dark);
             border: none;
-            padding: 15px 30px;
+            padding: 12px 30px;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: background 0.2s;
+        }
+
+        .retry-btn:hover {
+            background-color: #90979a;
+        }
+
+        /* Responsive */
+        @media (max-width: 500px) {
+            .options-grid { grid-template-columns: 1fr; gap: 10px; }
+            .quiz-title { font-size: 1.3rem; }
+            .header-logo { font-size: 1.2rem; }
+            .logo-left { left: 15px; } .logo-right { right: 15px; }
         }
     </style>
 </head>
 <body>
 
 <div id="quiz-card">
-    <div id="quiz-content">
-        <div class="progress" id="progress">1 / 10</div>
-        <div class="question" id="question">질문이 여기에 표시됩니다.</div>
-        <div class="options" id="options">
+    <div class="quiz-header">
+        <span class="header-logo logo-left">LA</span>
+        <h1 class="quiz-title">Dodgers Baseball Quiz</h1>
+        <span class="header-logo logo-right">LA</span>
+    </div>
+
+    <div id="quiz-view">
+        <div class="progress-bar">
+            <span id="q-counter">Question 1 / 10</span>
+        </div>
+
+        <div class="question-container">
+            <p class="question-text" id="q-text">Loading...</p>
+        </div>
+
+        <div class="options-grid" id="options-grid">
+            </div>
+
+        <div class="next-btn-container" id="next-btn-container">
+            <button class="next-btn" onclick="loadNextQuestion()">Next Question ⚾️</button>
+        </div>
+
+        <div id="explanation-banner">
             </div>
     </div>
 
-    <div id="result">
-        <h1>경기 종료! 🏟️</h1>
-        <div class="score-text" id="final-score">0점</div>
-        <p class="ceremony-msg" id="comment">평가 메시지</p>
-        <button class="retry-btn" onclick="location.reload()">다시 도전하기</button>
+    <div id="result-view">
+        <div class="result-header">FINAL RESULTS</div>
+        <p>Your Season Score:</p>
+        <div class="final-score" id="final-score">0점</div>
+        <p id="comment">경기 종료! 아쉬운 패배군요.</p>
+
+        <div id="review-container">
+            <h3 style="margin-top:0; color:var(--dodger-blue);">Game Review (틀린 문제 확인)</h3>
+            <div id="review-list">
+                </div>
+        </div>
+
+        <button class="retry-btn" onclick="location.reload()">플레이볼! 다시 시작</button>
     </div>
 </div>
 
 <script>
+    // 10 Terminology-focused questions (Force out, Balk, etc.)
     const questions = [
-        { q: "정식 야구 경기에서 한 팀의 선발 출전 인원수는?", a: ["8명", "9명", "10명", "11명"], cor: 1 },
-        { q: "메이저리그(MLB)에 한국인 최초로 진출한 투수는?", a: ["류현진", "박찬호", "김병현", "추신수"], cor: 1 },
-        { q: "타자가 안타, 2루타, 3루타, 홈런을 모두 기록하는 것을 무엇이라 하나요?", a: ["그랜드 슬램", "사이클링 히트", "트리플 크라운", "퍼펙트 게임"], cor: 1 },
-        { q: "투수가 한 명의 타자도 출루시키지 않고 승리하는 기록은?", a: ["노히트 노런", "셧아웃", "퍼펙트 게임", "퀄리티 스타트"], cor: 2 },
-        { q: "야구에서 기록지상 'K'는 무엇을 의미하나요?", a: ["안타", "볼넷", "삼진", "도루"], cor: 2 },
-        { q: "지명타자 제도를 영어 약자로 무엇이라고 하나요?", a: ["DH", "SP", "RP", "CP"], cor: 0 },
-        { q: "만루 홈런을 쳤을 때 얻을 수 있는 점수는?", a: ["3점", "4점", "5점", "6점"], cor: 1 },
-        { q: "투수의 방어율을 뜻하는 용어는?", a: ["OPS", "WHIP", "ERA", "WAR"], cor: 2 },
-        { q: "한 이닝에 아웃카운트 3개를 한 번에 잡는 것을 무엇이라 하나요?", a: ["더블 플레이", "트리플 플레이", "언어시스티드 아웃", "포스 아웃"], cor: 1 },
-        { q: "야구에서 '베테랑의 품격'이라 불리며, 홈런/타율/타점 1위를 모두 차지하는 것은?", a: ["트리플 크라운", "골든 글러브", "MVP", "올스타"], cor: 0 }
+        { q: "주자가 베이스에 꽉 찬 상황에서 타자가 땅볼을 쳤을 때, 수비수가 주자를 태그하지 않고 베이스만 밟아도 아웃이 되는 상황은?", a: ["태그 아웃", "포스 아웃", "인필드 플라이", "보크"], cor: 1, exp: "'포스 상황'에서는 주자가 다음 베이스로 반드시 가야 하므로 베이스 터치만으로 아웃됩니다. (image_0.png 참고)" },
+        { q: "투수가 주자가 있을 때 투구 동작 중 기만행위를 하여 주자에게 한 베이스 진루권을 주는 반칙은?", a: ["보크", "폭투", "데드볼", "패스트볼"], cor: 0, exp: "보크(Balk)는 투수의 부정투구 행위로, 모든 주자가 안전하게 한 베이스씩 진루합니다." },
+        { q: "무사 또는 1사에 주자 1,2루 혹은 만루 상황에서 타자가 친 평범한 내야 플라이를 심판의 재량으로 타자 아웃으로 처리하는 규칙은?", a: ["고의4구", "트리플 플레이", "인필드 플라이", "언어시스티드 아웃"], cor: 2, exp: "고의로 낙구하여 병살타를 만드는 것을 방지하기 위한 '인필드 플라이' 규칙입니다." },
+        { q: "수비수가 공을 잡은 손이나 글러브로 루를 점유하지 못한 주자의 몸을 터치하여 아웃시키는 것은?", a: ["포스 아웃", "태그 아웃", "어필 아웃", "터치 아웃"], cor: 1, exp: "주자가 베이스에 닿기 전에 수비수가 공을 가진 상태로 주자의 몸을 태그해야 합니다." },
+        { q: "타자가 친 공이 파울 라인 안쪽 내야에 떨어진 후 수비수가 잡기 전에 파울 지역으로 굴러나갔을 때 판정은?", a: ["파울", "페어", "데드볼", "노플레이"], cor: 0, exp: "내야(1,3루 베이스 전)에서 멈추거나 수비수에게 잡히기 전에 파울라인을 벗어나면 파울입니다." },
+        { q: "야구 기록지에서 'K'는 무엇을 의미하나요?", a: ["안타", "볼넷", "도루", "삼진"], cor: 3, exp: "삼진(Strikeout)의 약어로 K를 사용하며, 헛스윙 삼진은 거꾸로 된 K로 표기하기도 합니다." },
+        { q: "타자가 친 공이 페어 지역 내 담장을 넘어갔을 때를 무엇이라고 하나요?", a: ["그라운드 홈런", "그랜드 슬램", "홈런", "사이클링 히트"], cor: 2, exp: "페어 지역 밖으로 나간 홈런은 모든 주자와 타자가 홈으로 들어오는 가장 화끈한 플레이입니다." },
+        { q: "타자가 친 공이 페어 지역에 떨어진 후 원바운드로 담장을 넘어갔을 때의 판정은?", a: ["그라운드 홈런", "그라운드 룰 더블", "홈런", "파울"], cor: 1, exp: "인정 2루타라고도 불리며, 타자와 모든 주자는 두 개의 베이스를 진루합니다." },
+        { q: "2스트라이크 이후 바운드 된 공에 타자가 헛스윙을 하였고, 포수가 이 공을 정확히 포구하지 못한 상황에서 타자가 1루로 진루할 수 있는 상황은?", a: ["보크", "폭투", "낫아웃", "패스트볼"], cor: 2, exp: "스트라이크아웃 낫아웃 상황으로, 타자는 루에 진루할 기회를 갖습니다." },
+        { q: "선발 투수가 6이닝 이상 투구하고 3자책점 이하로 막아낸 주전 투수의 능력 지표는?", a: ["완투", "완봉승", "퀄리티 스타트", "사이 영 상"], cor: 2, exp: "퀄리티 스타트(QS)는 선발 투수의 안정적인 투구 능력을 평가하는 주요 지표입니다." }
     ];
 
     let currentIdx = 0;
     let score = 0;
+    let userSelections = []; // Store question results for review
+
+    const quizView = document.getElementById('quiz-view');
+    const resultView = document.getElementById('result-view');
+    const qCounter = document.getElementById('q-counter');
+    const qText = document.getElementById('q-text');
+    const optionsGrid = document.getElementById('options-grid');
+    const nextBtnContainer = document.getElementById('next-btn-container');
+    const explanationBanner = document.getElementById('explanation-banner');
+    const reviewList = document.getElementById('review-list');
 
     function loadQuestion() {
         if (currentIdx >= questions.length) {
@@ -138,50 +379,113 @@
         }
 
         const qData = questions[currentIdx];
-        document.getElementById('progress').innerText = `${currentIdx + 1} / ${questions.length}`;
-        document.getElementById('question').innerText = qData.q;
+        qCounter.innerText = `Question ${currentIdx + 1} / ${questions.length}`;
+        qText.innerText = qData.q;
         
-        const optionsDiv = document.getElementById('options');
-        optionsDiv.innerHTML = '';
+        // Reset states
+        optionsGrid.innerHTML = '';
+        nextBtnContainer.style.display = 'none';
+        explanationBanner.style.display = 'none';
+        explanationBanner.className = '';
         
         qData.a.forEach((opt, index) => {
             const btn = document.createElement('button');
+            btn.className = 'option-btn';
             btn.innerText = opt;
             btn.onclick = () => checkAnswer(index);
-            optionsDiv.appendChild(btn);
+            optionsGrid.appendChild(btn);
         });
     }
 
-    function checkAnswer(selected) {
-        if (selected === questions[currentIdx].cor) {
+    // Immediate answer reveal and explanation
+    function checkAnswer(selectedIndex) {
+        const qData = questions[currentIdx];
+        const correctIndex = qData.cor;
+        const buttons = optionsGrid.getElementsByTagName('button');
+        let isCorrect = (selectedIndex === correctIndex);
+
+        if (isCorrect) {
             score += 10;
         }
+
+        // Record results for review
+        userSelections.push({
+            q: qData.q,
+            userAns: qData.a[selectedIndex],
+            correctAns: qData.a[correctIndex],
+            isCorrect: isCorrect
+        });
+
+        // Visually update buttons
+        for (let i = 0; i < buttons.length; i++) {
+            buttons[i].disabled = true; // Disable all
+            if (i === correctIndex) {
+                buttons[i].classList.add('correct'); // Highlight correct
+            } else if (i === selectedIndex && !isCorrect) {
+                buttons[i].classList.add('wrong'); // Highlight wrong selection
+            }
+        }
+
+        // Show detailed explanation matching image_0.png
+        explanationBanner.innerText = isCorrect 
+            ? `정답입니다! ${qData.exp}` 
+            : `오답입니다. 정답은 '${qData.a[correctIndex]}'입니다. ${qData.exp}`;
+        explanationBanner.className = isCorrect ? 'correct' : 'wrong';
+        explanationBanner.style.display = 'block';
+
+        // Reveal Next button
+        nextBtnContainer.style.display = 'block';
+    }
+
+    function loadNextQuestion() {
         currentIdx++;
         loadQuestion();
     }
 
     function showResult() {
-        document.getElementById('quiz-content').style.display = 'none';
-        const resDiv = document.getElementById('result');
-        resDiv.style.display = 'block';
+        quizView.style.display = 'none';
+        resultView.style.display = 'block';
         
         document.getElementById('final-score').innerText = `${score}점`;
         
+        // Final message
         let comment = "";
+        let confettiTimes = 0;
         if (score === 100) {
-            comment = "⚾ 대단합니다! 당신은 명예의 전당급 야구 전문가군요!";
-            fireworks();
+            comment = "⚾ 대단합니다! 당신은 명예의 전당급 LA 다저스 전문가군요! 퍼펙트 게임! 🏆";
+            confettiTimes = 5;
         } else if (score >= 70) {
-            comment = "⚾ 훌륭한 안타입니다! 야구 좀 보시는군요?";
-            fireworks(2);
+            comment = "⚾ 훌륭한 안타입니다! 다저스 주전 라인업에 합류하세요! 🔥";
+            confettiTimes = 2;
         } else if (score >= 40) {
-            comment = "⚾ 번트 안타 성공! 조금만 더 공부하면 주전입니다.";
+            comment = "⚾ 번트 안타 성공! 조금만 더 공부하면 월드시리즈 우승입니다. 💪";
         } else {
-            comment = "⚾ 삼진 아웃! 다음 타석(재도전)을 기약하세요.";
+            comment = "⚾ 삼진 아웃! 다음 타석(재도전)에서 다시 승리하세요! 🧢";
         }
         document.getElementById('comment').innerText = comment;
+
+        // Populate Detailed Review Section
+        reviewList.innerHTML = '';
+        userSelections.forEach((item, index) => {
+            const reviewItem = document.createElement('div');
+            reviewItem.className = 'review-item';
+            
+            const correctnessClass = item.isCorrect ? 'ans-correct' : 'ans-wrong';
+            
+            reviewItem.innerHTML = `
+                <div class="review-q-text">Q${index+1}. ${item.q}</div>
+                <div class="review-ans">
+                    <div><span class="ans-label">Your Ans:</span> <span class="${correctnessClass}">${item.userAns}</span></div>
+                    ${!item.isCorrect ? `<div><span class="ans-label">Correct:</span> <span class="ans-correct">${item.correctAns}</span></div>` : ''}
+                </div>
+            `;
+            reviewList.appendChild(reviewItem);
+        });
+
+        if (confettiTimes > 0) fireworks(confettiTimes);
     }
 
+    // Celebrate high scores
     function fireworks(times = 5) {
         const duration = 3 * 1000;
         const animationEnd = Date.now() + duration;
@@ -199,12 +503,13 @@
             }
 
             const particleCount = 50 * (timeLeft / duration);
-            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            // Red and Blue confetti for Dodgers
+            confetti(Object.assign({}, defaults, { particleCount, colors: ['#005A9C', '#EF3E42', '#FFFFFF'], origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+            confetti(Object.assign({}, defaults, { particleCount, colors: ['#005A9C', '#EF3E42', '#FFFFFF'], origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
         }, 250);
     }
 
-    loadQuestion();
+    loadQuestion(); // Play ball!
 </script>
 
 </body>
